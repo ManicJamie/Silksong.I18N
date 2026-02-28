@@ -170,6 +170,7 @@ jobs:
       with:
         artifact-ids: ${{ needs.build.outputs.thunderstore-artifact-id }}
         path: thunderstore/dist
+        skip-decompress: true
     - name: Release
       uses: softprops/action-gh-release@v2
       with:
