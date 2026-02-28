@@ -91,6 +91,19 @@ mod's default language to English, you could add the following to your project f
 </PropertyGroup>
 ```
 
+#### Format Strings and Default Language
+
+In some cases, it may be desirable to define a language string of the form `{1} {0}` to be passed as the first
+argument of `string.Format`. This may lead to grammatical issues in other languages; in such cases it
+may be desirable to use the form `{0} - {1}`, for example `Bellway - Bilewater` is less likely to be unnatural
+in an arbitrary language than `Bilewater Bellway` which is natural in English. However, if it is desired to
+preserve the correct order in English, then EN cannot be used as the default language. To accomplish this, the
+following scheme is recommended:
+
+- Set the default language to an arbitrary language such as `DEFAULT`.
+- Populate `default.json` with default format strings and English-language text (or any other desired language)
+- Populate `en.json` with only the overridden format strings
+
 ### Add Localized Text
 
 To add localized text to your mod, create a directory named `languages` next to your mod's assembly.
