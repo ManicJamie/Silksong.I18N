@@ -31,6 +31,8 @@ jobs:
       attestation-url: ${{ steps.attest.outputs.attestation-url }}
       allow-release: 'true'
       is-new-version: ${{ !fromJSON(steps.needs-release.outputs.exists || 'true') }}
+      thunderstore-artifact-id: ${{ steps.thunderstore-artifact.outputs.artifact-id }}
+      nuget-artifact-id: ${{ steps.nuget-artifact.outputs.artifact-id }}
 
     steps:
     - uses: actions/checkout@v6
@@ -49,15 +51,17 @@ jobs:
         echo Version is $VERSION
         echo "version=$VERSION" >> $GITHUB_OUTPUT
     - name: Upload thunderstore artifact
+      id: thunderstore-artifact
       uses: actions/upload-artifact@v7
       with:
-        name: mod-bundle
-        path: thunderstore/dist
+        path: thunderstore/dist/*.zip
+        archive: false
     - name: Upload nuget artifact
+      id: nuget-artifact
       uses: actions/upload-artifact@v7
       with:
-        name: nuget
-        path: nuget/
+        path: nuget/*.nupkg
+        archive: false
     - name: Check if release needed
       id: needs-release
       uses: mukunku/tag-exists-action@v1.7.0
@@ -66,7 +70,7 @@ jobs:
         tag: v${{ steps.version.outputs.version }}
     - name: Generate attestation
       id: attest
-      uses: actions/attest-build-provenance@v4
+      uses: actions/attest@v4
       if: github.event_name == 'push' && steps.needs-release.outputs.exists == 'false'
       with:
         subject-path: |
@@ -104,8 +108,9 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@v8
       with:
-        name: mod-bundle
+        artifact-ids: ${{ needs.build.outputs.thunderstore-artifact-id }}
         path: thunderstore/dist
+        skip-decompress: true
     - name: Publish to Thunderstore
       if: env.THUNDERSTORE_API_KEY != ''
       run: |-
@@ -142,7 +147,7 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@v8
       with:
-        name: nuget
+        artifact-ids: ${{ needs.build.outputs.nuget-artifact-id }}
         path: nuget/
     - name: Publish to NuGet
       if: env.NUGET_API_KEY != ''
@@ -163,7 +168,7 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@v8
       with:
-        name: mod-bundle
+        artifact-ids: ${{ needs.build.outputs.thunderstore-artifact-id }}
         path: thunderstore/dist
     - name: Release
       uses: softprops/action-gh-release@v2
