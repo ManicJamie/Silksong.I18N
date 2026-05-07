@@ -7,6 +7,8 @@ using System.Resources;
 using System.Text;
 using BepInEx;
 using BepInEx.Bootstrap;
+using BepInEx.Configuration;
+using GlobalEnums;
 using HarmonyLib;
 using Newtonsoft.Json;
 using TeamCherry.Localization;
@@ -14,17 +16,49 @@ using TeamCherry.Localization;
 namespace Silksong.I18N;
 
 [BepInAutoPlugin(id: "org.silksong-modding.i18n")]
-internal sealed partial class I18NPlugin : BaseUnityPlugin
+public sealed partial class I18NPlugin : BaseUnityPlugin
 {
     private void Start()
     {
         I18NPlugin._instance = this;
         new Harmony(I18NPlugin.Id).PatchAll(typeof(I18NPlugin));
+
+        this.useLanguageOverride = this.Config.Bind<bool>(
+            "General",
+            "Use Language Override",
+            false,
+            "Whether to manually specify the language used for all modded text."
+        );
+        this.languageOverride = this.Config.Bind<SupportedLanguages>(
+            "General",
+            "Language Override",
+            SupportedLanguages.EN,
+            "Modded text will use this language if Use Language Override is enabled."
+        );
+        this.useLanguageOverride.SettingChanged += (_, _) => this.LoadAllModSheets();
+        this.languageOverride.SettingChanged += (_, _) => this.LoadAllModSheets();
+
         this.LoadAllModSheets();
     }
 
     private static I18NPlugin? _instance = null;
     private static I18NPlugin? Instance => I18NPlugin._instance ? I18NPlugin._instance : null;
+
+    private ConfigEntry<bool>? useLanguageOverride;
+    private ConfigEntry<SupportedLanguages>? languageOverride;
+
+    public LanguageCode? LanguageOverride
+    {
+        get
+        {
+            if (this.useLanguageOverride is not null && this.useLanguageOverride.Value)
+            {
+                return (LanguageCode?)this.languageOverride?.Value;
+            }
+
+            return null;
+        }
+    }
 
     [HarmonyPatch(typeof(Language), nameof(Language.DoSwitch))]
     [HarmonyPostfix]
@@ -32,7 +66,12 @@ internal sealed partial class I18NPlugin : BaseUnityPlugin
 
     private void LoadAllModSheets()
     {
-        var lang = Language._currentLanguage;
+        var lang = this.LanguageOverride ?? Language._currentLanguage;
+        if (this.useLanguageOverride is not null && this.useLanguageOverride.Value)
+        {
+            this.Logger.LogDebug($"using language override {lang}");
+        }
+
         foreach (var (id, info) in Chainloader.PluginInfos)
         {
             var mod = info.Instance;
