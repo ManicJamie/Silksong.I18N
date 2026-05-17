@@ -1,7 +1,3 @@
 <Solution>
-  <Folder Name="/.github/">
-    <File Path=".github/workflows/build-publish.yml" />
-    <File Path=".github/dependabot.yml" />
-  </Folder>
-  <Project Path="Silksong.I18N.csproj" />
+  <Project Path="src/Silksong.I18N.csproj" />
 </Solution>
