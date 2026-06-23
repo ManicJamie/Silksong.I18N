@@ -186,7 +186,8 @@ internal static class LanguagePatches
         {
             if (!Language.Has(key, sheet))
             {
-                LanguageCode lang = Language.CurrentLanguage();
+                LanguageCode lang =
+                    I18NPlugin.Instance.LanguageOverride ?? Language._currentLanguage;
                 var modId = sheet.Substring("Mods.".Length);
                 I18NPlugin.Instance.Logger.LogWarning(
                     $"language {lang} for mod {modId} missing: {key}"
@@ -197,7 +198,8 @@ internal static class LanguagePatches
                 var text = LocalisedString.ReplaceTags(Language.Get(key, sheet));
                 if (string.IsNullOrWhiteSpace(text))
                 {
-                    LanguageCode lang = Language.CurrentLanguage();
+                    LanguageCode lang =
+                        I18NPlugin.Instance.LanguageOverride ?? Language._currentLanguage;
                     var modId = sheet.Substring("Mods.".Length);
                     I18NPlugin.Instance.Logger.LogWarning(
                         $"language {lang} for mod {modId} is blank at: {key}"
